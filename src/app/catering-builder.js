@@ -714,7 +714,7 @@ export function createCateringBuilder() {
       });
     } catch (e) {
       console.error("GHL submission failed:", e);
-      if (statusEl) statusEl.textContent = "Could not reach team server — please try again.";
+      if (statusEl) statusEl.textContent = `Error: ${e.message}`;
       return;
     }
 
