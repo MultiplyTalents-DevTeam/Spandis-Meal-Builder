@@ -227,9 +227,10 @@ export function attachBranchDropdown(container) {
         if (!isSel && check) check.outerHTML = `<span class="branch-select__item-dot"></span>`;
       });
 
-      // Clear invalid state
+      // Clear invalid state on branch + scan all other filled fields
       trigger?.classList.remove("is-invalid");
       document.getElementById("err-branch")?.setAttribute("hidden", "");
+      clearFilledErrors(container);
 
       closeMenu();
     });
@@ -311,6 +312,21 @@ export function validateAndRead() {
  * Clears invalid state when the user starts correcting a field.
  * Call once on the form container via event delegation.
  */
+/**
+ * Scans the container for any invalid inputs that now have a value and clears them.
+ * Call this after autofill or programmatic population to keep error state in sync.
+ */
+export function clearFilledErrors(container) {
+  if (!container) return;
+  container.querySelectorAll(".form-field__input.is-invalid").forEach((input) => {
+    if (input.value.trim().length > 0) {
+      input.classList.remove("is-invalid");
+      const errEl = input.closest(".form-field")?.querySelector(".form-field__error");
+      if (errEl) errEl.hidden = true;
+    }
+  });
+}
+
 export function attachInlineValidation(container) {
   function clearIfValid(e) {
     const input = e.target.closest(".form-field__input");
@@ -321,10 +337,13 @@ export function attachInlineValidation(container) {
       const errEl = field?.querySelector(".form-field__error");
       if (errEl) errEl.hidden = true;
     }
+    // Also clear any other autofilled fields in one pass
+    clearFilledErrors(container);
   }
   container.addEventListener("input",   clearIfValid);
   container.addEventListener("change",  clearIfValid);
   container.addEventListener("focusin", clearIfValid);
+  container.addEventListener("click",   clearIfValid);
 }
 
 /**

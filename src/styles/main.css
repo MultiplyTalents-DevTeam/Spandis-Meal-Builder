@@ -2945,7 +2945,6 @@ dd {
 
 .swap-select__item.is-selected {
   background: var(--copper-bg);
-  box-shadow: inset 3px 0 0 var(--copper);
 }
 
 .swap-select__item-name {

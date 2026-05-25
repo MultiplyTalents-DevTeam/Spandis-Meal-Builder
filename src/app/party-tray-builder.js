@@ -5,6 +5,7 @@ import {
   validateAndRead,
   attachInlineValidation,
   attachBranchDropdown,
+  clearFilledErrors,
   buildInquiryText,
 } from "./contact-form.js";
 import { pushInquiryToGHL } from "./ghl.js";
@@ -337,7 +338,15 @@ export function createPartyTrayBuilder() {
 
   async function copyOrder() {
     const { valid, values } = validateAndRead();
-    if (!valid) return;
+    if (!valid) {
+      const panel = document.querySelector("[data-pt-panel='3']");
+      const t = setInterval(() => {
+        clearFilledErrors(panel);
+        if (!panel?.querySelector(".form-field__input.is-invalid")) clearInterval(t);
+      }, 150);
+      setTimeout(() => clearInterval(t), 5000);
+      return;
+    }
 
     const total = getTotal();
     const orderLines = [

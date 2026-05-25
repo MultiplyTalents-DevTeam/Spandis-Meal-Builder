@@ -10,6 +10,7 @@ import {
   validateAndRead,
   attachInlineValidation,
   attachBranchDropdown,
+  clearFilledErrors,
   buildInquiryText,
 } from "./contact-form.js";
 import { pushInquiryToGHL } from "./ghl.js";
@@ -459,10 +460,11 @@ export function createCateringBuilder() {
     const options = item.replaceable ? getReplacementDishes(item) : [];
     const isFixed = !item.replaceable || options.length === 0;
 
+    const hasAdj = item.isChanged && item.priceDiff !== 0;
     const priceCell = `
       <div class="swap-row__price" id="swap-price-${esc(key)}">
-        <span>${item.isChanged ? "Adj." : "Incl."}</span>
-        <strong>${item.isChanged ? formatSignedPeso(item.priceDiff) : formatPeso(item.originalPrice * item.quantity)}</strong>
+        <span>${hasAdj ? "Adj." : "Incl."}</span>
+        <strong>${hasAdj ? formatSignedPeso(item.priceDiff) : formatPeso(item.originalPrice * item.quantity)}</strong>
       </div>`;
 
     if (isFixed) {
@@ -536,9 +538,10 @@ export function createCateringBuilder() {
       const priceEl = document.getElementById(`swap-price-${key}`);
       const article = document.querySelector(`[data-swap-article="${CSS.escape(key)}"]`);
       if (priceEl) {
+        const hasAdj = item.isChanged && item.priceDiff !== 0;
         priceEl.innerHTML = `
-          <span>${item.isChanged ? "Adj." : "Incl."}</span>
-          <strong>${item.isChanged ? formatSignedPeso(item.priceDiff) : formatPeso(item.originalPrice * item.quantity)}</strong>
+          <span>${hasAdj ? "Adj." : "Incl."}</span>
+          <strong>${hasAdj ? formatSignedPeso(item.priceDiff) : formatPeso(item.originalPrice * item.quantity)}</strong>
         `;
       }
       if (article) article.classList.toggle("is-changed", item.isChanged);
@@ -666,7 +669,16 @@ export function createCateringBuilder() {
 
   async function copyOrder() {
     const { valid, values } = validateAndRead();
-    if (!valid) return;
+    if (!valid) {
+      // Autofill doesn't fire input events — poll and clear any filled fields
+      const panel = document.querySelector("[data-cat-panel='3']");
+      const t = setInterval(() => {
+        clearFilledErrors(panel);
+        if (!panel?.querySelector(".form-field__input.is-invalid")) clearInterval(t);
+      }, 150);
+      setTimeout(() => clearInterval(t), 5000);
+      return;
+    }
 
     const combo = getActiveCombo();
     if (!combo) return;
