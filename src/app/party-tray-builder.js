@@ -22,6 +22,16 @@ export function createPartyTrayBuilder() {
 
   let nextItemId = 1;
 
+  const TRAY_SERVES = { family: 5, feast: 11, xxxl: 22 };
+
+  function getServesEstimate() {
+    if (state.cart.length === 0) return null;
+    const total = state.cart.reduce((sum, item) => {
+      return sum + (TRAY_SERVES[item.traySize] || 0) * item.qty;
+    }, 0);
+    return total > 0 ? total : null;
+  }
+
   function mount(container) {
     const cats = getCategories();
     if (cats.length > 0) {
@@ -242,6 +252,7 @@ export function createPartyTrayBuilder() {
           <div class="running-total-bar__info">
             <span class="running-total-bar__label">Running total</span>
             <span class="running-total-bar__amount running-total-bar__amount--empty">&mdash;</span>
+            <span class="running-total-bar__serves">Add items to see estimate</span>
           </div>
           <button class="primary-button" type="button" disabled aria-disabled="true">Review Quote &rarr;</button>
         </div>
@@ -273,6 +284,7 @@ export function createPartyTrayBuilder() {
         <div class="running-total-bar__info">
           <span class="running-total-bar__label">Running total</span>
           <span class="running-total-bar__amount">${formatPeso(total)}</span>
+          <span class="running-total-bar__serves">${(() => { const s = getServesEstimate(); return s ? `Approx. ${s}+ servings` : ''; })()}</span>
         </div>
         <button class="primary-button" type="button" data-go-pt-step="2">Review Quote &rarr;</button>
       </div>
@@ -384,6 +396,7 @@ export function createPartyTrayBuilder() {
       `Name     : ${values.firstName} ${values.lastName}`,
       `Email    : ${values.email}`,
       `Phone    : ${values.phone}`,
+      ...(values.eventDate ? [`Date     : ${values.eventDate}`] : []),
       ...(values.address ? [`Address  : ${values.address}`] : []),
       ...(values.note ? ["", "── EVENT NOTES ─────────────────────────────", values.note] : []),
       "",

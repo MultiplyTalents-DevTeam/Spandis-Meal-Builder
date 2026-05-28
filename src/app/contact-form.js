@@ -7,12 +7,23 @@
 const CHECK_SVG_SM = `<svg class="branch-select__item-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`;
 
 export function buildContactPanel({ backAttr, copyAttr, statusId, orderLines }) {
+  const minDate = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    return d.toISOString().split("T")[0];
+  })();
+
   return `
     <div class="panel-header">
       <div>
         <p class="section-kicker">Step 4 of 4 &middot; Almost done</p>
         <h2>Your Details</h2>
       </div>
+    </div>
+
+    <div class="contact-booking-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Please book at least <strong>3 days before your event.</strong> Spandi's team will confirm within 24 hours.
     </div>
 
     <p class="contact-intro">
@@ -129,6 +140,23 @@ export function buildContactPanel({ backAttr, copyAttr, statusId, orderLines }) 
       </div>
 
       <div class="form-field">
+        <label class="form-field__label" for="cf-date">
+          Event Date <span class="form-field__req" aria-hidden="true">*</span>
+        </label>
+        <input
+          type="date"
+          id="cf-date"
+          name="eventDate"
+          class="form-field__input"
+          min="${minDate}"
+          required
+        />
+        <span class="form-field__error" id="err-date" role="alert" hidden>
+          Please select your event date (at least 3 days from today).
+        </span>
+      </div>
+
+      <div class="form-field">
         <label class="form-field__label" for="cf-address">
           Address
           <span class="form-field__optional">Optional</span>
@@ -229,7 +257,8 @@ export function attachBranchDropdown(container) {
 
       // Clear invalid state on branch + scan all other filled fields
       trigger?.classList.remove("is-invalid");
-      document.getElementById("err-branch")?.setAttribute("hidden", "");
+      const branchErrEl = document.getElementById("err-branch");
+      if (branchErrEl) { branchErrEl.hidden = true; }
       clearFilledErrors(container);
 
       closeMenu();
@@ -247,6 +276,7 @@ export function validateAndRead() {
     { id: "cf-last-name",  errId: "err-last-name",  type: "text"  },
     { id: "cf-email",      errId: "err-email",       type: "email" },
     { id: "cf-phone",      errId: "err-phone",       type: "text"  },
+    { id: "cf-date",       errId: "err-date",        type: "date"  },
   ];
 
   let valid        = true;
@@ -277,6 +307,10 @@ export function validateAndRead() {
     if (type === "email" && fieldOk) {
       fieldOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     }
+    if (type === "date" && fieldOk) {
+      const minDate = input.getAttribute("min");
+      if (minDate) fieldOk = value >= minDate;
+    }
 
     if (!fieldOk) {
       input.classList.add("is-invalid");
@@ -297,13 +331,14 @@ export function validateAndRead() {
   return {
     valid: true,
     values: {
-      branch:    document.getElementById("cf-branch")?.value            ?? "",
-      firstName: document.getElementById("cf-first-name")?.value.trim() ?? "",
-      lastName:  document.getElementById("cf-last-name")?.value.trim()  ?? "",
-      email:     document.getElementById("cf-email")?.value.trim()      ?? "",
-      phone:     document.getElementById("cf-phone")?.value.trim()      ?? "",
-      address:   document.getElementById("cf-address")?.value.trim()    ?? "",
-      note:      document.getElementById("cf-note")?.value.trim()       ?? "",
+      branch:     document.getElementById("cf-branch")?.value             ?? "",
+      firstName:  document.getElementById("cf-first-name")?.value.trim() ?? "",
+      lastName:   document.getElementById("cf-last-name")?.value.trim()  ?? "",
+      email:      document.getElementById("cf-email")?.value.trim()      ?? "",
+      phone:      document.getElementById("cf-phone")?.value.trim()      ?? "",
+      eventDate:  document.getElementById("cf-date")?.value              ?? "",
+      address:    document.getElementById("cf-address")?.value.trim()    ?? "",
+      note:       document.getElementById("cf-note")?.value.trim()       ?? "",
     },
   };
 }
@@ -350,7 +385,7 @@ export function attachInlineValidation(container) {
  * Builds the full plain-text inquiry string to copy to clipboard.
  */
 export function buildInquiryText(serviceName, orderSummaryLines, contactValues) {
-  const { branch, firstName, lastName, email, phone, address, note } = contactValues;
+  const { branch, firstName, lastName, email, phone, eventDate, address, note } = contactValues;
   const lines = [
     `Spandi's Food + Catering — ${serviceName} Inquiry`,
     "═".repeat(48),
@@ -360,8 +395,9 @@ export function buildInquiryText(serviceName, orderSummaryLines, contactValues) 
     `Name    : ${firstName} ${lastName}`,
     `Email   : ${email}`,
     `Phone   : ${phone}`,
-    address ? `Address : ${address}` : null,
-    note    ? `\nNote    : ${note}` : null,
+    eventDate ? `Date    : ${eventDate}` : null,
+    address   ? `Address : ${address}` : null,
+    note      ? `\nNote    : ${note}` : null,
     "",
     "─".repeat(48),
     "",

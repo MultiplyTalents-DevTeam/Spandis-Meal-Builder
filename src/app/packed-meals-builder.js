@@ -261,6 +261,7 @@ export function createPackedMealsBuilder() {
           <div class="running-total-bar__info">
             <span class="running-total-bar__label">Running total</span>
             <span class="running-total-bar__amount running-total-bar__amount--empty">&mdash;</span>
+            <span class="running-total-bar__serves">Add items to see estimate</span>
           </div>
           <button class="primary-button" type="button" disabled aria-disabled="true">Review Quote &rarr;</button>
         </div>
@@ -270,6 +271,7 @@ export function createPackedMealsBuilder() {
     }
 
     const total = state.cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+    const totalPeople = state.cart.reduce((s, i) => s + i.qty, 0);
     updateStickyCartBar(state.cart.length, formatPeso(total));
     section.innerHTML = `
       <p class="section-kicker">Your Order &middot; ${state.cart.length} item${state.cart.length !== 1 ? "s" : ""}</p>
@@ -292,6 +294,7 @@ export function createPackedMealsBuilder() {
         <div class="running-total-bar__info">
           <span class="running-total-bar__label">Running total</span>
           <span class="running-total-bar__amount">${formatPeso(total)}</span>
+          <span class="running-total-bar__serves">Feeds ${totalPeople} guest${totalPeople !== 1 ? "s" : ""}</span>
         </div>
         <button class="primary-button" type="button" data-go-pm-step="2">Review Quote &rarr;</button>
       </div>

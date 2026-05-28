@@ -432,6 +432,10 @@ export function createCateringBuilder() {
             <div class="quote-panel__total" id="cat-quote-total">${formatPeso(totals.total)}</div>
             <dl class="quote-panel__lines">
               <div>
+                <dt>Serves</dt>
+                <dd>${esc(combo.paxLabel)}</dd>
+              </div>
+              <div>
                 <dt>Base combo</dt>
                 <dd>${formatPeso(totals.base)}</dd>
               </div>
@@ -790,6 +794,7 @@ export function createCateringBuilder() {
       `Name     : ${values.firstName} ${values.lastName}`,
       `Email    : ${values.email}`,
       `Phone    : ${values.phone}`,
+      ...(values.eventDate ? [`Date     : ${values.eventDate}`] : []),
       ...(values.address ? [`Address  : ${values.address}`] : []),
       ...(values.note ? ["", "── EVENT NOTES ─────────────────────────────", values.note] : []),
       "",
